@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Live Tour Guide</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>AI Tour Guide</h1>
+            <p>Your personal, charismatic guide to the world.</p>
+        </header>
+
+        <div class="mode-selector">
+            <button class="mode-btn active" data-mode="camera">Live Camera</button>
+            <button class="mode-btn" data-mode="image">Upload Image</button>
+        </div>
+
+        <main>
+            <div id="camera-section" class="input-section active">
+                <video id="webcam" autoplay playsinline></video>
+                <canvas id="canvas" style="display:none;"></canvas>
+            </div>
+
+            <div id="image-section" class="input-section">
+                <div class="file-drop-area">
+                    <span class="file-msg">Drag & drop an image or click to select</span>
+                    <input type="file" id="file-input" accept="image/*">
+                </div>
+                <img id="image-preview" style="display:none;" />
+            </div>
+
+            <textarea id="text-input" placeholder="Any specific questions? (Optional)"></textarea>
+
+            <button id="analyze-btn" class="primary-btn">Analyze & Guide</button>
+
+            <div id="status-container" style="display: none;">
+                <div class="loader"></div>
+                <p id="status-text">Thinking...</p>
+            </div>
+
+            <div id="result-container" style="display: none;">
+                <h3>Guide's Insight:</h3>
+                <p id="insight-text"></p>
+                <audio id="audio-player" controls autoplay></audio>
+            </div>
+        </main>
+    </div>
+    <script src="/static/script.js"></script>
+</body>
+</html>
