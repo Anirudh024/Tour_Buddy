@@ -1,32 +1,33 @@
 version: '3.9'
 
 services:
-  web:
-    build: .
-    container_name: location-analyzer
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: history-analyzer-app
     ports:
       - "8080:8080"
     environment:
       - PORT=8080
-      - PYTHONUNBUFFERED=1
       - GEMINI_API_KEY=${GEMINI_API_KEY}
     volumes:
-      - ./app.py:/app/app.py
       - ./static:/app/static
-      - ./requirements.txt:/app/requirements.txt
+      - ./app.py:/app/app.py
     develop:
       watch:
-        - path: ./app.py
-          action: sync
+        - action: sync
+          path: ./app.py
           target: /app/app.py
-        - path: ./static
-          action: sync
+        - action: sync
+          path: ./static
           target: /app/static
-        - path: ./requirements.txt
-          action: rebuild
+        - action: rebuild
+          path: ./requirements.txt
+    restart: unless-stopped
     healthcheck:
-      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:8080/', timeout=5)"]
+      test: ["CMD", "curl", "-f", "http://localhost:8080/"]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 5s
+      start_period: 40s
