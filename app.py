@@ -28,14 +28,14 @@ def analyze_location():
 
     image_data = image_data.split(",")[1]
     
-    # Updated Prompt: Now requests a 1-sentence description for nearby places
+    # Updated Prompt: Now requests 'era' and 'visual_scene' for nearby places too!
     prompt = """
     Analyze this image. 
     1. Identify the monument or location and provide its exact latitude and longitude.
     2. Provide a strict 1-sentence (max 20 words) historical tour guide script suitable for a 10-second video.
     3. Identify the specific 'era' it was built (e.g., "Ancient Egypt, 2560 BC", "Mughal Empire, 1632").
     4. Provide a 'visual_scene' describing what a bustling day looked like there when it was newly built (e.g., "Merchants trading in colorful tents while workers carve limestone").
-    5. List 3 nearby attractions, providing the name, latitude, longitude, and a brief 1-sentence description for each.
+    5. List 3 nearby attractions. For EACH, provide the name, latitude, longitude, a brief 1-sentence description, the 'era' it was built, and a 'visual_scene' of it in its prime.
     
     You MUST format your response as strict JSON without markdown formatting like this:
     {
@@ -46,7 +46,7 @@ def analyze_location():
       "era": "...",
       "visual_scene": "...",
       "nearby": [
-        {"name": "...", "lat": 0.0, "lng": 0.0, "description": "..."}
+        {"name": "...", "lat": 0.0, "lng": 0.0, "description": "...", "era": "...", "visual_scene": "..."}
       ]
     }
     """
@@ -127,7 +127,5 @@ def check_video_status(job_id):
     return jsonify(job)
 
 if __name__ == "__main__":
-    # Use the port assigned by Google Cloud, or default to 8080 locally
     port = int(os.environ.get("PORT", 8080))
-    # Listen on 0.0.0.0 so the service is accessible from the container network
     app.run(host='0.0.0.0', port=port)

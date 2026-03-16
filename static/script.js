@@ -7,7 +7,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const navItems = document.querySelectorAll('.nav-item');
     const mainArea = document.getElementById('content-area');
     
-    function switchTab(targetId) {
+    // Made global so startMapVideo can call it
+    window.switchTab = function(targetId) {
         document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
         document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
         
@@ -18,7 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (targetId === 'map-section' && map) {
             setTimeout(() => map.invalidateSize(), 100);
         }
-    }
+    };
 
     navItems.forEach(item => {
         item.addEventListener('click', () => switchTab(item.dataset.target));
@@ -145,12 +146,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- TEXT-TO-SPEECH (Pleasant Voice Updates) ---
+    // --- TEXT-TO-SPEECH ---
     function playTTS(text) {
         window.speechSynthesis.cancel();
         const utterance = new SpeechSynthesisUtterance(text);
         
-        // Search for pleasant, natural-sounding female voices standard on most devices
         const voices = window.speechSynthesis.getVoices();
         const pleasantVoice = voices.find(v => 
             v.name.includes('Samantha') || 
@@ -162,13 +162,13 @@ document.addEventListener('DOMContentLoaded', () => {
         
         if (pleasantVoice) utterance.voice = pleasantVoice;
 
-        utterance.rate = 0.95; // Slightly slower, more deliberate pacing
-        utterance.pitch = 1.05; // Slightly elevated pitch for warmth
+        utterance.rate = 0.95; 
+        utterance.pitch = 1.05; 
         window.speechSynthesis.speak(utterance);
     }
     window.speechSynthesis.onvoiceschanged = () => { window.speechSynthesis.getVoices(); };
 
-    // --- LEAFLET MAP (With Rich Descriptions) ---
+    // --- LEAFLET MAP ---
     function updateMap(data) {
         document.getElementById('map-hint').innerText = "Tap a pin to explore details.";
 
@@ -187,19 +187,45 @@ document.addEventListener('DOMContentLoaded', () => {
         const mainMarker = L.marker([data.lat, data.lng]).addTo(map).bindPopup(mainPopupHTML).openPopup();
         mapMarkers.push(mainMarker);
 
-        // Nearby location markers with descriptions
+        // Nearby location markers with descriptions AND Generate Video Button
         data.nearby.forEach(place => {
+            const safeName = place.name.replace(/'/g, "\\'");
+            const safeEra = place.era ? place.era.replace(/'/g, "\\'") : "Unknown Era";
+            const safeScene = place.visual_scene ? place.visual_scene.replace(/'/g, "\\'") : "A bustling historical day.";
+
             const popupHTML = `
                 <div class="popup-title">${place.name}</div>
                 <div class="popup-desc">${place.description || 'Nearby Attraction'}</div>
+                <button class="pill-btn dark-btn popup-btn" onclick="startMapVideo('${safeName}', '${safeEra}', '${safeScene}')">
+                    Generate History Video
+                </button>
             `;
             const marker = L.marker([place.lat, place.lng]).addTo(map).bindPopup(popupHTML);
             mapMarkers.push(marker);
         });
     }
 
+    // GLOBALLY ACCESSIBLE FUNCTION FOR MAP POPUP BUTTONS
+    window.startMapVideo = function(name, era, scene) {
+        if (map) map.closePopup();
+        
+        // Switch back to the explore tab
+        switchTab('explore-section');
+        
+        const resultCard = document.getElementById('result-card');
+        resultCard.classList.remove('hidden');
+        resultCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        
+        document.getElementById('location-name').innerText = name;
+        document.getElementById('tour-script').innerText = `Looking up archives for ${name} (${era})...`;
+        
+        // Start video generation for the selected nearby place
+        generateVideoStory(name, era, scene);
+    };
+
     // --- ASYNC VEO POLLING ---
-    async function generateVideoStory(location, era, visual_scene) {
+    // Made globally accessible just in case, though it's called internally
+    window.generateVideoStory = async function(location, era, visual_scene) {
         const videoElement = document.getElementById('story-video');
         document.getElementById('video-container').classList.remove('hidden');
         
@@ -224,6 +250,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     videoElement.poster = "";
                     videoElement.src = statusData.url;
                     videoElement.play();
+                    // Update text to match success
+                    document.getElementById('tour-script').innerText = `Here is your historical visual tour for ${location}.`;
                 } else if (statusData.status === 'failed') {
                     clearInterval(pollInterval);
                     videoElement.poster = "https://via.placeholder.com/400x225/1C1C1E/ff4444?text=Generation+Failed";
@@ -233,7 +261,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) {
             console.error("Video API Error:", error);
         }
-    }
+    };
 
     // --- HISTORY ---
     function addToHistory(location, script) {
